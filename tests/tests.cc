@@ -1,7 +1,22 @@
 #include "gtest/gtest.h"
-#include "lib/linlib.h"
+#include "lib/parser.h"
 
-TEST(HelloTest, GetGreet) {
-  EXPECT_EQ(linlib::version_name(), "Liblib 0.1");
+
+struct EH : public linlib::EventHandler
+{
+    double _v;
+
+    void handle_literal(double v) { _v = v; }
+};
+
+TEST(Parser, parse_number) {
+  EH eh;
+  linlib::Parser  parser{"123 456", eh};
+
+  parser.parse();
+  EXPECT_EQ(eh._v, 123.0);
+
+  parser.parse();
+  EXPECT_EQ(eh._v, 456.0);
 }
 
