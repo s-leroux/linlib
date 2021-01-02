@@ -33,3 +33,6 @@
 
 # Bazel build system
 bazel-*
+
+# Editor swap files
+*.swp
