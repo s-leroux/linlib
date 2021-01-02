@@ -1,4 +1,6 @@
+#include <string>
+
 namespace linlib
 {
-  static const unsigned VERSION = 0x100;
+    std::string version_name(void);
 }

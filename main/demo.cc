@@ -4,5 +4,5 @@
 
 int main()
 {
-  std::cout << linlib::VERSION << std::endl;
+  std::cout << linlib::version_name() << std::endl;
 }
