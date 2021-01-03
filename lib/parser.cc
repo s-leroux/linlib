@@ -63,6 +63,14 @@ char Parser::next()
     return *_rest;
 }
 
+void Parser::expect(char c)
+{
+    if (next() == c)
+        ++_rest;
+    else
+        _handler.bad_token_error();
+}
+
 void Parser::read_number()
 {
     const char* start = _rest;
@@ -105,7 +113,13 @@ void Parser::read_term()
             read_number();
             return;
         case '+':
+            ++_rest;
             read_term();
+            return;
+        case '(':
+            ++_rest;
+            read_expr();
+            expect(')');
             return;
 
         default:
@@ -123,6 +137,17 @@ void Parser::read_term()
 void Parser::read_expr()
 {
     read_term();
+/*
+    char n = next();
+    switch(n)
+    {
+        case '+':
+            break;
+
+        default:
+            _handler.bad_token_error();
+    }
+*/
 }
 
 void Parser::parse()

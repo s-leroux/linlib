@@ -1,6 +1,8 @@
 #if !defined LINLIB_PARSER_H
 #define LINLIB_PARSER_H
 
+#include <stack>
+
 namespace linlib {
 
 class EventHandler
@@ -42,6 +44,12 @@ class Parser
       Advance to the next character of the input, skipping white spaces
     */
     char next();
+
+    /**
+      Consume the given character if found in the stream, otherwise
+      report an error.
+    */
+    void expect(char c);
 
     void read_number();
 

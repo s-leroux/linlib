@@ -25,3 +25,27 @@ TEST(Parser, parse_number_with_unary_plus) {
   EXPECT_EQ(eh._v, 123.0);
 }
 
+TEST(Parser, parse_parenthesis_1) {
+  EH eh;
+  linlib::Parser  parser{" ( 123 ) ", eh};
+
+  parser.parse();
+  EXPECT_EQ(eh._v, 123.0);
+}
+
+TEST(Parser, parse_parenthesis_2) {
+  EH eh;
+  linlib::Parser  parser{" ( ( 123 ) ) ", eh};
+
+  parser.parse();
+  EXPECT_EQ(eh._v, 123.0);
+}
+
+TEST(Parser, parse_parenthesis_3) {
+  EH eh;
+  linlib::Parser  parser{" ( + ( 123 ) ) ", eh};
+
+  parser.parse();
+  EXPECT_EQ(eh._v, 123.0);
+}
+
