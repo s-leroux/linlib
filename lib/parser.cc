@@ -81,44 +81,53 @@ void Parser::read_number()
     _handler.handle_literal(result);
 }
 
+/**
+    term := number
+            | '+' term
+            | '(' expr ')'
+*/
+void Parser::read_term()
+{
+    char n = next();
+
+    switch(n)
+    {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            read_number();
+            return;
+        case '+':
+            read_term();
+            return;
+
+        default:
+            _handler.bad_token_error();
+    }
+
+    read_number();
+}
+
+/**
+    expr := term
+            | term '+' expr
+            | term '*' expr
+*/
 void Parser::read_expr()
 {
-    while(true)
-    {
-        char n = next();
-
-        switch(n)
-        {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                _prod.push(&Parser::read_number);
-                return;
-
-            default:
-                _handler.bad_token_error();
-        }
-    }
+    read_term();
 }
 
 void Parser::parse()
 {
-    _prod.push(&Parser::read_expr);
-
-    while(!_prod.empty())
-    {
-        auto read = _prod.top();
-        _prod.pop();
-
-        (this->*read)();
-    }
+    read_expr();
 }
 
 } /* namespace */

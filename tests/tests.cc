@@ -11,12 +11,17 @@ struct EH : public linlib::EventHandler
 
 TEST(Parser, parse_number) {
   EH eh;
-  linlib::Parser  parser{"123 456", eh};
+  linlib::Parser  parser{" 123  ", eh};
 
   parser.parse();
   EXPECT_EQ(eh._v, 123.0);
+}
+
+TEST(Parser, parse_number_with_unary_plus) {
+  EH eh;
+  linlib::Parser  parser{"  +123  ", eh};
 
   parser.parse();
-  EXPECT_EQ(eh._v, 456.0);
+  EXPECT_EQ(eh._v, 123.0);
 }
 

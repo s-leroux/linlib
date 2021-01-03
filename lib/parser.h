@@ -1,8 +1,6 @@
 #if !defined LINLIB_PARSER_H
 #define LINLIB_PARSER_H
 
-#include <stack>
-
 namespace linlib {
 
 class EventHandler
@@ -36,7 +34,6 @@ class Parser
     const char*             _rest;
 
     EventHandler&           _handler;
-    std::stack<void (Parser::*)()>  _prod;
 
     public:
     Parser(const std::string& expr, EventHandler& handler) : _rest(expr.c_str()), _handler(handler) {}
@@ -48,6 +45,7 @@ class Parser
 
     void read_number();
 
+    void read_term();
     void read_expr();
 
     void parse();
