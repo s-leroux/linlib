@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdio>
 #include <stack>
 #include <cstdlib>
 
@@ -10,7 +11,7 @@ namespace linlib {
 enum TK
 {
     /* in this enum, operators appear sorted by operator precedence descending */
-    
+
     /* litterals */
     TK_NUM = 0,
 
@@ -38,7 +39,7 @@ void reduce(const std::string& expr, std::stack<Token>& stk, EventHandler& handl
     {
         Token top = stk.top();
         stk.pop();
-        
+
         switch(top._tk)
         {
             case TK_LPAR:   return;
@@ -55,6 +56,25 @@ void reduce(const std::string& expr, std::stack<Token>& stk, EventHandler& handl
     }
 }
 
+void error_helper(const char* msg, const char* stmt, unsigned pos)
+{
+    std::fprintf(stderr,
+      "%s:\n"
+      "%s\n"
+      "%*c\n",
+      msg, stmt, pos+1, '^');
+}
+
+void EventHandler::bad_token_error(const char* stmt, unsigned pos)
+{
+    error_helper("Bad token error", stmt, pos);
+}
+
+void EventHandler::bad_literal_error(const char* stmt, unsigned pos)
+{
+    error_helper("Bad literal error", stmt, pos);
+}
+
 char Parser::next()
 {
     while(std::isspace(static_cast<unsigned char>(*_rest)))
@@ -67,7 +87,7 @@ bool Parser::expect(char c)
 {
     if (next() != c)
     {
-        _handler.bad_token_error();
+        _handler.bad_token_error(_start, _rest-_start);
         return false;
     }
 
@@ -81,18 +101,18 @@ bool Parser::read_number()
     char* end;
 
     double result = std::strtod(start, &end);
-    
+
     /* TODO should check errno */
     if (end == start)
     {
-        _handler.bad_token_error();
+        _handler.bad_token_error(_start, _rest-_start);
         return false;
     }
 
     _rest = end;
-    _handler.handle_literal(result);
-    return true;
+    return _handler.handle_literal(result);
 }
+
 
 /**
     term := number
@@ -124,19 +144,53 @@ bool Parser::read_term()
             return read_expr() && expect(')');
 
         default:
-            _handler.bad_token_error();
+            _handler.bad_token_error(_start, _rest-_start);
             return false;
     }
 }
 
 /**
-    expr := term
-            | term '+' expr
-            | term '*' expr
+    prod := term
+            | term '*' prod
+*/
+bool Parser::read_prod()
+{
+    if (!read_term())
+        return false;
+
+    char n = next();
+
+    if (n != '*')
+        return true;
+
+    ++_rest;
+    return read_term() && _handler.handle_product();
+}
+
+/**
+    sum := prod
+          | prod '+' sum
+*/
+bool Parser::read_sum()
+{
+    if (!read_prod())
+        return false;
+
+    char n = next();
+
+    if (n != '+')
+        return true;
+
+    ++_rest;
+    return read_prod() && _handler.handle_sum();
+}
+
+/**
+    expr := sum
 */
 bool Parser::read_expr()
 {
-    return read_term();
+    return read_sum();
 /*
     char n = next();
     switch(n)
@@ -152,7 +206,8 @@ bool Parser::read_expr()
 
 bool Parser::parse()
 {
-    return read_expr();
+
+    return read_expr() && expect('\00');
 }
 
 } /* namespace */

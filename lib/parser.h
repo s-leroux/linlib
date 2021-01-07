@@ -7,21 +7,26 @@ namespace linlib {
 
 class EventHandler
 {
+    protected:
+    virtual void error(const char* str) const { throw str; }
+
     public:
     virtual ~EventHandler(void) {}
 
-    virtual void handle_literal(double value) = 0;
+    virtual bool handle_literal(double value) = 0;
+    virtual bool handle_product() = 0;
+    virtual bool handle_sum() = 0;
 
-    virtual void bad_token_error() { throw "Bad token error"; }
-    virtual void bad_literal_error() { throw "Bad literal error"; }
+    virtual void bad_token_error(const char* stmt, unsigned pos);
+    virtual void bad_literal_error(const char* stmt, unsigned pos);
 };
-
+/*
 class SampleEventHandler : public EventHandler
 {
     public:
     virtual void handle_literal(double value) {};
 };
-
+*/
 /**
     Parse an expression.
 
@@ -33,12 +38,13 @@ void parse(const std::string& expr, EventHandler& handler);
 class Parser
 {
     private:
+    const char*             _start;
     const char*             _rest;
 
     EventHandler&           _handler;
 
     public:
-    Parser(const std::string& expr, EventHandler& handler) : _rest(expr.c_str()), _handler(handler) {}
+    Parser(const std::string& expr, EventHandler& handler) : _start(expr.c_str()), _rest(_start), _handler(handler) {}
 
     /**
       Advance to the next character of the input, skipping white spaces
@@ -52,6 +58,9 @@ class Parser
     bool expect(char c);
 
     bool read_number();
+
+    bool read_sum();
+    bool read_prod();
 
     bool read_term();
     bool read_expr();
