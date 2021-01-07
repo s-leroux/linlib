@@ -63,15 +63,19 @@ char Parser::next()
     return *_rest;
 }
 
-void Parser::expect(char c)
+bool Parser::expect(char c)
 {
-    if (next() == c)
-        ++_rest;
-    else
+    if (next() != c)
+    {
         _handler.bad_token_error();
+        return false;
+    }
+
+    ++_rest;
+    return true;
 }
 
-void Parser::read_number()
+bool Parser::read_number()
 {
     const char* start = _rest;
     char* end;
@@ -82,11 +86,12 @@ void Parser::read_number()
     if (end == start)
     {
         _handler.bad_token_error();
-        return;
+        return false;
     }
 
     _rest = end;
     _handler.handle_literal(result);
+    return true;
 }
 
 /**
@@ -94,7 +99,7 @@ void Parser::read_number()
             | '+' term
             | '(' expr ')'
 */
-void Parser::read_term()
+bool Parser::read_term()
 {
     char n = next();
 
@@ -110,23 +115,18 @@ void Parser::read_term()
         case '7':
         case '8':
         case '9':
-            read_number();
-            return;
+            return read_number();
         case '+':
             ++_rest;
-            read_term();
-            return;
+            return read_term();
         case '(':
             ++_rest;
-            read_expr();
-            expect(')');
-            return;
+            return read_expr() && expect(')');
 
         default:
             _handler.bad_token_error();
+            return false;
     }
-
-    read_number();
 }
 
 /**
@@ -134,9 +134,9 @@ void Parser::read_term()
             | term '+' expr
             | term '*' expr
 */
-void Parser::read_expr()
+bool Parser::read_expr()
 {
-    read_term();
+    return read_term();
 /*
     char n = next();
     switch(n)
@@ -150,9 +150,9 @@ void Parser::read_expr()
 */
 }
 
-void Parser::parse()
+bool Parser::parse()
 {
-    read_expr();
+    return read_expr();
 }
 
 } /* namespace */

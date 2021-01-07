@@ -49,14 +49,14 @@ class Parser
       Consume the given character if found in the stream, otherwise
       report an error.
     */
-    void expect(char c);
+    bool expect(char c);
 
-    void read_number();
+    bool read_number();
 
-    void read_term();
-    void read_expr();
+    bool read_term();
+    bool read_expr();
 
-    void parse();
+    bool parse();
 
 
 };
