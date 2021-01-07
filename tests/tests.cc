@@ -1,7 +1,9 @@
 #include "gtest/gtest.h"
 #include "lib/parser.h"
 
-
+// ========================================================================
+//  Helpers
+// ========================================================================
 struct EH : public linlib::EventHandler
 {
     std::string  _stack;
@@ -30,22 +32,42 @@ struct EH : public linlib::EventHandler
     }
 };
 
+template<std::size_t N>
+void test(const char* (&testcases)[N], const char* expected)
+{
+  for(auto testcase : testcases)
+  {
+      EH eh;
+      linlib::Parser  parser{testcase, eh};
+
+      ASSERT_TRUE(parser.parse());
+
+      EXPECT_EQ(eh._stack, expected);
+  }
+
+}
+
+
+
+// ========================================================================
+//  Atoms
+// ========================================================================
 TEST(Parser, parse_number) {
-  EH eh;
-  linlib::Parser  parser{" 123  ", eh};
+  const char*  testcases[] = {
+        "123",
+        " 123  ",
+        " +123  ",
+        " + 123  ",
+  };
 
-  ASSERT_TRUE(parser.parse());
-  EXPECT_EQ(eh._stack, "123.000000;");
+  test(testcases,
+    "123.000000;"
+  );
 }
 
-TEST(Parser, parse_number_with_unary_plus) {
-  EH eh;
-  linlib::Parser  parser{"  +123  ", eh};
-
-  ASSERT_TRUE(parser.parse());
-  EXPECT_EQ(eh._stack, "123.000000;");
-}
-
+// ========================================================================
+//  Binary operators
+// ========================================================================
 TEST(Parser, parse_product)
 {
   const char*  testcases[] = {
@@ -54,19 +76,11 @@ TEST(Parser, parse_product)
     "+ 12 * + 3",
   };
 
-  for(auto testcase : testcases)
-  {
-      EH eh;
-      linlib::Parser  parser{testcase, eh};
-
-      ASSERT_TRUE(parser.parse());
-
-      EXPECT_EQ(eh._stack,
-        "12.000000;"
-        "3.000000;"
-        "MUL;"
-      );
-  }
+  test(testcases,
+    "12.000000;"
+    "3.000000;"
+    "MUL;"
+  );
 }
 
 TEST(Parser, parse_sum)
@@ -77,21 +91,17 @@ TEST(Parser, parse_sum)
     "+ 12 + + 3",
   };
 
-  for(auto testcase : testcases)
-  {
-      EH eh;
-      linlib::Parser  parser{testcase, eh};
-
-      ASSERT_TRUE(parser.parse());
-
-      EXPECT_EQ(eh._stack,
-        "12.000000;"
-        "3.000000;"
-        "ADD;"
-      );
-  }
+  test(testcases,
+    "12.000000;"
+    "3.000000;"
+    "ADD;"
+  );
 }
 
+
+// ========================================================================
+//  Parenthesis
+// ========================================================================
 TEST(Parser, parse_parenthesis_1) {
   EH eh;
   linlib::Parser  parser{" ( 123 ) ", eh};
@@ -116,3 +126,60 @@ TEST(Parser, parse_parenthesis_3) {
   EXPECT_EQ(eh._stack, "123.000000;");
 }
 
+
+// ========================================================================
+//  Associativity
+// ========================================================================
+TEST(Parser, assoc_1)
+{
+  const char*  testcases[] = {
+    "12 + 3 + 4 + 5",
+    "(12 + 3) + 4 + 5",
+    "((12 + 3) + 4 )+ 5",
+  };
+
+  test(testcases,
+        "12.000000;"
+        "3.000000;"
+        "ADD;"
+        "4.000000;"
+        "ADD;"
+        "5.000000;"
+        "ADD;"
+  );
+}
+
+// ========================================================================
+//  Operator precedence
+// ========================================================================
+TEST(Parser, precedence_1)
+{
+  const char*  testcases[] = {
+    "12 + 3 * 4",
+    "12 + ( 3 * 4 )",
+  };
+
+  test(testcases,
+        "12.000000;"
+        "3.000000;"
+        "4.000000;"
+        "MUL;"
+        "ADD;"
+  );
+}
+
+TEST(Parser, precedence_2)
+{
+  const char*  testcases[] = {
+    "12 * 3 + 4",
+    "(12 *  3) + 4",
+  };
+
+  test(testcases,
+        "12.000000;"
+        "3.000000;"
+        "MUL;"
+        "4.000000;"
+        "ADD;"
+  );
+}

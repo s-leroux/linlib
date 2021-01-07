@@ -164,7 +164,7 @@ bool Parser::read_prod()
         return true;
 
     ++_rest;
-    return read_term() && _handler.handle_product();
+    return read_prod() && _handler.handle_product();
 }
 
 /**
@@ -182,7 +182,7 @@ bool Parser::read_sum()
         return true;
 
     ++_rest;
-    return read_prod() && _handler.handle_sum();
+    return read_sum() && _handler.handle_sum();
 }
 
 /**
