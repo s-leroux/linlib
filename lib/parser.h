@@ -44,7 +44,7 @@ class Parser
     EventHandler&           _handler;
 
     public:
-    Parser(const std::string& expr, EventHandler& handler) : _start(expr.c_str()), _rest(_start), _handler(handler) {}
+    Parser(const char* expr, EventHandler& handler) : _start(expr), _rest(expr), _handler(handler) {}
 
     /**
       Advance to the next character of the input, skipping white spaces
