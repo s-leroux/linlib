@@ -150,39 +150,43 @@ bool Parser::read_term()
 }
 
 /**
-    prod := term
-            | term '*' prod
+    prod := term [ '*' term ]*
 */
 bool Parser::read_prod()
 {
     if (!read_term())
         return false;
 
-    char n = next();
+    while(next() == '*')
+    {
+        ++_rest;
+        if (read_term() and _handler.handle_product())
+            continue;
 
-    if (n != '*')
-        return true;
+        return false;
+    };
 
-    ++_rest;
-    return read_prod() && _handler.handle_product();
+    return true;
 }
 
 /**
-    sum := prod
-          | prod '+' sum
+    sum := prod [ '+' prod ]*
 */
 bool Parser::read_sum()
 {
     if (!read_prod())
         return false;
 
-    char n = next();
+    while(next() == '+')
+    {
+        ++_rest;
+        if (read_prod() and _handler.handle_sum())
+            continue;
 
-    if (n != '+')
-        return true;
+        return false;
+    };
 
-    ++_rest;
-    return read_sum() && _handler.handle_sum();
+    return true;
 }
 
 /**
