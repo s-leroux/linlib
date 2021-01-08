@@ -25,9 +25,21 @@ struct EH : public linlib::EventHandler
       return true;
     }
 
+    bool handle_division()
+    {
+      push("DIV");
+      return true;
+    }
+
     bool handle_sum()
     {
       push("ADD");
+      return true;
+    }
+
+    bool handle_difference()
+    {
+      push("SUB");
       return true;
     }
 };
@@ -83,6 +95,21 @@ TEST(Parser, parse_product)
   );
 }
 
+TEST(Parser, parse_division)
+{
+  const char*  testcases[] = {
+    "12/3",
+    "12 / 3",
+    "+ 12 / + 3",
+  };
+
+  test(testcases,
+    "12.000000;"
+    "3.000000;"
+    "DIV;"
+  );
+}
+
 TEST(Parser, parse_sum)
 {
   const char*  testcases[] = {
@@ -95,6 +122,21 @@ TEST(Parser, parse_sum)
     "12.000000;"
     "3.000000;"
     "ADD;"
+  );
+}
+
+TEST(Parser, parse_difference)
+{
+  const char*  testcases[] = {
+    "12-3",
+    "12 - 3",
+    "+ 12 - + 3",
+  };
+
+  test(testcases,
+    "12.000000;"
+    "3.000000;"
+    "SUB;"
   );
 }
 
@@ -152,6 +194,25 @@ TEST(Parser, assoc_1)
 TEST(Parser, assoc_2)
 {
   const char*  testcases[] = {
+    "12 - 3 + 4 - 5",
+    "(12 - 3) + 4 - 5",
+    "((12 - 3) + 4 )- 5",
+  };
+
+  test(testcases,
+        "12.000000;"
+        "3.000000;"
+        "SUB;"
+        "4.000000;"
+        "ADD;"
+        "5.000000;"
+        "SUB;"
+  );
+}
+
+TEST(Parser, assoc_3)
+{
+  const char*  testcases[] = {
     "12 * 3 * 4 * 5",
     "(12 * 3) * 4 * 5",
     "((12 * 3) * 4 )* 5",
@@ -165,6 +226,25 @@ TEST(Parser, assoc_2)
         "MUL;"
         "5.000000;"
         "MUL;"
+  );
+}
+
+TEST(Parser, assoc_4)
+{
+  const char*  testcases[] = {
+    "12 / 3 * 4 / 5",
+    "(12 / 3) * 4 / 5",
+    "((12 / 3) * 4 )/ 5",
+  };
+
+  test(testcases,
+        "12.000000;"
+        "3.000000;"
+        "DIV;"
+        "4.000000;"
+        "MUL;"
+        "5.000000;"
+        "DIV;"
   );
 }
 

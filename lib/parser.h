@@ -15,7 +15,9 @@ class EventHandler
 
     virtual bool handle_literal(double value) = 0;
     virtual bool handle_product() = 0;
+    virtual bool handle_division() = 0;
     virtual bool handle_sum() = 0;
+    virtual bool handle_difference() = 0;
 
     virtual void bad_token_error(const char* stmt, unsigned pos);
     virtual void bad_literal_error(const char* stmt, unsigned pos);

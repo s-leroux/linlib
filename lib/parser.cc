@@ -157,36 +157,60 @@ bool Parser::read_prod()
     if (!read_term())
         return false;
 
-    while(next() == '*')
+    while(true)
     {
-        ++_rest;
-        if (read_term() and _handler.handle_product())
-            continue;
+        char n = next();
 
+        if (n=='*')
+        {
+            ++_rest;
+            if (read_term() and _handler.handle_product())
+                continue;
+        }
+        else if (n=='/')
+        {
+            ++_rest;
+            if (read_term() and _handler.handle_division())
+                continue;
+        }
+        else
+            return true;
+
+        // otherwise
         return false;
-    };
-
-    return true;
+    }
 }
 
 /**
-    sum := prod [ '+' prod ]*
+    sum := prod [ '+'|'-' prod ]*
 */
 bool Parser::read_sum()
 {
     if (!read_prod())
         return false;
 
-    while(next() == '+')
+    while(true)
     {
-        ++_rest;
-        if (read_prod() and _handler.handle_sum())
-            continue;
+        char n = next();
 
+        if (n=='+')
+        {
+            ++_rest;
+            if (read_prod() and _handler.handle_sum())
+                continue;
+        }
+        else if (n=='-')
+        {
+            ++_rest;
+            if (read_prod() and _handler.handle_difference())
+                continue;
+        }
+        else
+            return true;
+
+        // otherwise
         return false;
-    };
-
-    return true;
+    }
 }
 
 /**
