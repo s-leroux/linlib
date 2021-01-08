@@ -10,7 +10,6 @@ cc_library(
       "parser.h",
     ],
     visibility = [
-      "//main:__pkg__",
-      "//tests:__pkg__",
+      "//visibility:public",
     ],
 )
