@@ -113,40 +113,66 @@ bool Parser::read_number()
     return _handler.handle_literal(result);
 }
 
+bool Parser::read_identifier()
+{
+    const char* start = _rest;
+    const char* curr = start;
+
+    if (*curr != '_' && !std::isalpha((unsigned int)*curr))
+        return false;
+
+    for(;;)
+    {
+        ++curr;
+        if (*curr != '_' && !std::isalnum((unsigned int)*curr))
+        {
+            _rest = curr;
+            return _handler.handle_identifier(start, _rest-start);
+        }
+
+    }
+}
+
+
+/**
+    call := identifier '(' expr ')'
+*/
+bool Parser::read_call()
+{
+    return read_identifier() && expect('(') && read_expr() && expect(')')
+            && _handler.handle_call();
+}
 
 /**
     term := number
             | '+' term
             | '(' expr ')'
+            | call
 */
 bool Parser::read_term()
 {
     char n = next();
 
-    switch(n)
+    if (n == '(')
     {
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            return read_number();
-        case '+':
-            ++_rest;
-            return read_term();
-        case '(':
-            ++_rest;
-            return read_expr() && expect(')');
-
-        default:
-            _handler.bad_token_error(_start, _rest-_start);
-            return false;
+        ++_rest;
+        return read_expr() && expect(')');
     }
+    else if (n == '+')
+    {
+        ++_rest;
+        return read_term();
+    }
+    else if ((n & 0x80)==0)
+    {
+        if (std::isdigit(n))
+            return read_number();
+        else
+            return read_call();
+    }
+
+    _handler.bad_token_error(_start, _rest-_start);
+    return false;
 }
 
 /**

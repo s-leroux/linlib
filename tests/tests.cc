@@ -12,10 +12,23 @@ struct EH : public linlib::EventHandler
     void push(const T& v) { _stack = _stack + std::to_string(v) + ";"; }
 
     void push(const char* v) { _stack = _stack + v + ";"; }
+    void push(const char* v, std::size_t len) { _stack = std::string(v, len) + ";"; }
+
+    bool handle_identifier(const char *identifier, std::size_t len)
+    {
+      push(identifier, len);
+      return true;
+    }
 
     bool handle_literal(double v)
     {
       push(v);
+      return true;
+    }
+
+    bool handle_call()
+    {
+      push("CALL");
       return true;
     }
 
@@ -282,3 +295,22 @@ TEST(Parser, precedence_2)
         "ADD;"
   );
 }
+
+// ========================================================================
+//  Function call
+// ========================================================================
+TEST(Parser, funcall)
+{
+  const char*  testcases[] = {
+    "cos(1+2)",
+  };
+
+  test(testcases,
+        "1.000000;"
+        "2.000000;"
+        "ADD;"
+        "cos;"
+        "CALL;"
+  );
+}
+
