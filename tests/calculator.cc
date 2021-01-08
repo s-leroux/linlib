@@ -94,13 +94,23 @@ void test(const char* testcase, double expected)
 
 
 // ========================================================================
-//  Atoms
+//  Tests
 // ========================================================================
-TEST(Parser, parse_number) {
+TEST(Parser, should_pass) {
     test(" 1 ", 1.0);
     test(" 1 + 2 ", 3.0);
     test(" 1 + 2*3 ", 7.0);
     test(" 1 * 2-3 ", -1.0);
     test(" 1 * 2/4 ", 0.5);
     test(" sqrt(4)", 2);
+}
+
+TEST(Parser, should_fail) {
+    const char* testcase = " xxxxx(4)";
+
+    EH eh;
+    linlib::Parser  parser{testcase, eh};
+
+    ASSERT_FALSE(parser.parse());
+    EXPECT_EQ(parser.state(), linlib::Parser::INTERNAL_ERROR);
 }

@@ -21,9 +21,9 @@ void EventHandler::bad_token_error(const char* stmt, unsigned pos)
     error_helper("Bad token error", stmt, pos);
 }
 
-void EventHandler::bad_literal_error(const char* stmt, unsigned pos)
+void EventHandler::syntax_error(const char* stmt, unsigned pos)
 {
-    error_helper("Bad literal error", stmt, pos);
+    error_helper("Syntax error", stmt, pos);
 }
 
 char Parser::next()
@@ -34,13 +34,26 @@ char Parser::next()
     return *_rest;
 }
 
+bool Parser::bad_token_error()
+{
+    _handler.bad_token_error(_start, _rest-_start);
+    _state = BAD_TOKEN_ERROR;
+
+    return false;
+}
+
+bool Parser::syntax_error()
+{
+    _handler.syntax_error(_start, _rest-_start);
+    _state = SYNTAX_ERROR;
+
+    return false;
+}
+
 bool Parser::expect(char c)
 {
     if (next() != c)
-    {
-        _handler.bad_token_error(_start, _rest-_start);
-        return false;
-    }
+        return syntax_error();
 
     ++_rest;
     return true;
@@ -53,12 +66,11 @@ bool Parser::read_number()
 
     double result = std::strtod(start, &end);
 
-    /* TODO should check errno */
-    if (end == start)
-    {
-        _handler.bad_token_error(_start, _rest-_start);
-        return false;
-    }
+    /* TODO should check errno to return overflow error */
+    if (*end & 0x80)
+        return bad_token_error();
+    else if (end == start)
+        return syntax_error();
 
     _rest = end;
     return _handler.handle_literal(result);
@@ -68,13 +80,18 @@ bool Parser::read_identifier()
 {
     const char* curr = _rest;
 
-    if (*curr != '_' && !std::isalpha((unsigned int)*curr))
-        return false;
+    if (*curr & 0x80)
+        return bad_token_error();
+
+    else if (*curr != '_' && !std::isalpha((unsigned int)*curr))
+        return syntax_error();
 
     for(;;)
     {
         ++curr;
-        if (*curr != '_' && !std::isalnum((unsigned int)*curr))
+        if (*curr & 0x80)
+            return bad_token_error();
+        else if (*curr != '_' && !std::isalnum((unsigned int)*curr))
         {
             _rest = curr;
             return true;
@@ -127,8 +144,8 @@ bool Parser::read_term()
             return read_call();
     }
 
-    _handler.bad_token_error(_start, _rest-_start);
-    return false;
+    // n is outside the 0-127 range
+    return bad_token_error();
 }
 
 /**
@@ -216,8 +233,63 @@ bool Parser::read_expr()
 
 bool Parser::parse()
 {
+    class Monitor
+    {
+        State& _state;
+        State  _end_state = INTERNAL_ERROR;
 
-    return read_expr() && expect('\00');
+        public:
+        Monitor(State &state)
+          : _state(state), _end_state(INTERNAL_ERROR)
+        {
+            _state = RUNNING;
+        }
+
+        ~Monitor()
+        {
+            if (_state == RUNNING)
+                _state = _end_state;
+        }
+
+        inline bool done(void) { _end_state = OK; return true; }
+    };
+
+    Monitor   monitor{_state};
+
+    return read_expr() && expect('\00') && monitor.done();
+}
+
+//========================================================================
+//  Diagnostic
+//========================================================================
+std::string   Parser::where() const
+{
+    const std::size_t LINE_LEN = 76;
+    char    line1[LINE_LEN];
+    char    line2[LINE_LEN];
+
+    std::snprintf(line1, LINE_LEN, "%s\n", _start);
+    std::snprintf(line2, LINE_LEN, "%*c\n", (int)(_rest-_start+1), '^');
+
+    return std::string(line1) + line2;
+}
+
+std::string   Parser::what() const
+{
+    static const char*  tbl[] = {
+        "",
+        "running",
+        "internal error",
+        "bad token error",
+        "syntax error",
+    };
+
+    return tbl[_state];
+}
+
+std::string   Parser::message() const
+{
+    return what() + ":\n" + where();
 }
 
 } /* namespace */
