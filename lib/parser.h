@@ -23,19 +23,7 @@ class EventHandler
     virtual void bad_token_error(const char* stmt, unsigned pos);
     virtual void bad_literal_error(const char* stmt, unsigned pos);
 };
-/*
-class SampleEventHandler : public EventHandler
-{
-    public:
-    virtual void handle_literal(double value) {};
-};
-*/
-/**
-    Parse an expression.
 
-    This is an event-based parser that will call the relevant
-    enter_* method of the handler.
-*/
 void parse(const std::string& expr, EventHandler& handler);
 
 class Parser

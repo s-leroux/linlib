@@ -7,55 +7,6 @@
 
 namespace linlib {
 
-
-enum TK
-{
-    /* in this enum, operators appear sorted by operator precedence descending */
-
-    /* litterals */
-    TK_NUM = 0,
-
-    /* operators */
-    TK_LPAR,
-    TK_MUL,
-    TK_PLUS,
-};
-
-class Token
-{
-    public:
-    const TK _tk;
-    const int _pos;
-    int _len;
-
-    Token(TK tk, unsigned pos = -1) : _tk(tk), _pos(pos), _len(0) {}
-};
-
-void reduce(const std::string& expr, std::stack<Token>& stk, EventHandler& handler)
-{
-    std::cout << "reduce" << std::endl;
-
-    while(true)
-    {
-        Token top = stk.top();
-        stk.pop();
-
-        switch(top._tk)
-        {
-            case TK_LPAR:   return;
-            case TK_NUM:
-                std::cout << "TK_NUM " << expr.substr(top._pos, top._len) << std::endl;
-                break;
-            case TK_PLUS:
-                std::cout << "TK_PLUS" << std::endl;
-                break;
-            case TK_MUL:
-                std::cout << "TK_MUL" << std::endl;
-                break;
-        }
-    }
-}
-
 void error_helper(const char* msg, const char* stmt, unsigned pos)
 {
     std::fprintf(stderr,
