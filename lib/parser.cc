@@ -115,8 +115,7 @@ bool Parser::read_number()
 
 bool Parser::read_identifier()
 {
-    const char* start = _rest;
-    const char* curr = start;
+    const char* curr = _rest;
 
     if (*curr != '_' && !std::isalpha((unsigned int)*curr))
         return false;
@@ -127,7 +126,7 @@ bool Parser::read_identifier()
         if (*curr != '_' && !std::isalnum((unsigned int)*curr))
         {
             _rest = curr;
-            return _handler.handle_identifier(start, _rest-start);
+            return true;
         }
 
     }
@@ -139,8 +138,14 @@ bool Parser::read_identifier()
 */
 bool Parser::read_call()
 {
-    return read_identifier() && expect('(') && read_expr() && expect(')')
-            && _handler.handle_call();
+    next(); // skip potential white spaces -- it does not cost much
+
+    const char*   id_start = _rest;
+    if (!read_identifier())
+        return false;
+
+    const char* id_end = _rest;
+    return expect('(') && read_expr() && expect(')') && _handler.handle_call(id_start, id_end-id_start);
 }
 
 /**

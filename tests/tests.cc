@@ -10,25 +10,23 @@ struct EH : public linlib::EventHandler
 
     template<class T>
     void push(const T& v) { _stack = _stack + std::to_string(v) + ";"; }
-
     void push(const char* v) { _stack = _stack + v + ";"; }
-    void push(const char* v, std::size_t len) { _stack = std::string(v, len) + ";"; }
 
-    bool handle_identifier(const char *identifier, std::size_t len)
+    template<std::size_t N>
+    void push(const char (&v)[N]) { _stack = _stack + v + ";"; }
+
+    bool handle_call(const char *identifier, std::size_t len)
     {
-      push(identifier, len);
+      char buffer[32];
+
+      std::snprintf(buffer, sizeof(buffer)/sizeof(char), "CALL(%.*s)", (int)len, identifier);
+      push(buffer);
       return true;
     }
 
     bool handle_literal(double v)
     {
       push(v);
-      return true;
-    }
-
-    bool handle_call()
-    {
-      push("CALL");
       return true;
     }
 
@@ -309,8 +307,7 @@ TEST(Parser, funcall)
         "1.000000;"
         "2.000000;"
         "ADD;"
-        "cos;"
-        "CALL;"
+        "CALL(cos);"
   );
 }
 

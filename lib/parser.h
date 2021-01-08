@@ -13,9 +13,8 @@ class EventHandler
     public:
     virtual ~EventHandler(void) {}
 
-    virtual bool handle_identifier(const char *identifier, std::size_t len) = 0;
     virtual bool handle_literal(double value) = 0;
-    virtual bool handle_call() = 0;
+    virtual bool handle_call(const char *identifier, std::size_t len) = 0;
     virtual bool handle_product() = 0;
     virtual bool handle_division() = 0;
     virtual bool handle_sum() = 0;
