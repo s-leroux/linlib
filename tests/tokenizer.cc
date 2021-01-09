@@ -36,3 +36,22 @@ TEST(Parser, tokenize) {
     test_tokens(" xxxxx 4", { Token::SYMBOL, Token::NUMBER, Token::END });
     test_tokens(" xxøxx 4", { Token::SYMBOL, Token::BAD_TOKEN, Token::SYMBOL, Token::NUMBER, Token::END });
 }
+
+TEST(Parser, numbers) {
+    using Token = linlib::Token;
+
+    const char* testcases[] = {
+        "0123456789",
+        "1e+4",
+        "1E+4",
+        ".1E+4",
+        "1E-4",
+        "1e-4",
+    };
+
+    for(auto testcase : testcases)
+        test_tokens(testcase, {
+            Token::NUMBER,
+            Token::END,
+        });
+}

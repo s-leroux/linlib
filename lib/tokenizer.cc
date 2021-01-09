@@ -32,11 +32,25 @@ Token   Tokenizer::number()
     const char *start = _rest;
     const char *curr = _rest;
 
-    // We keep all characters that could /potentially/ be part
-    // of a number. The parser will reject invalid numbers when
-    // trying to decode them.
-    while(*curr == 'e' || *curr == 'E' || *curr == '.' || *curr == '+' || *curr == '-' || isdigit(*curr))
+    while(isdigit(*curr))
         ++curr;
+
+    if (*curr=='.')
+        ++curr;
+
+    while(isdigit(*curr))
+        ++curr;
+
+
+    if (*curr=='e' || *curr=='E')
+    {
+        ++curr;
+        if (*curr=='+' || *curr=='-')
+            ++curr;
+
+        while(isdigit(*curr))
+            ++curr;
+    }
 
     _rest = curr;
 
