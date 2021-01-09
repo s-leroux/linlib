@@ -63,9 +63,9 @@ void test(const char* (&testcases)[N], const char* expected)
       EH eh;
       linlib::Parser  parser{testcase, eh};
 
-      ASSERT_TRUE(parser.parse());
+      ASSERT_TRUE(parser.parse()) << testcase;
 
-      EXPECT_EQ(eh._stack, expected);
+      EXPECT_EQ(eh._stack, expected) << testcase;
   }
 
 }

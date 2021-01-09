@@ -26,17 +26,9 @@ void EventHandler::syntax_error(const char* stmt, unsigned pos)
     error_helper("Syntax error", stmt, pos);
 }
 
-char Parser::next()
-{
-    while(std::isspace(static_cast<unsigned char>(*_rest)))
-      ++_rest;
-
-    return *_rest;
-}
-
 bool Parser::bad_token_error()
 {
-    _handler.bad_token_error(_start, _rest-_start);
+    _handler.bad_token_error(_start, static_cast<std::size_t>(_lookahead.start-_start));
     _state = BAD_TOKEN_ERROR;
 
     return false;
@@ -44,60 +36,39 @@ bool Parser::bad_token_error()
 
 bool Parser::syntax_error()
 {
-    _handler.syntax_error(_start, _rest-_start);
+    _handler.syntax_error(_start, static_cast<std::size_t>(_lookahead.start-_start));
     _state = SYNTAX_ERROR;
 
     return false;
 }
 
-bool Parser::expect(char c)
+bool Parser::next()
 {
-    if (next() != c)
+    _lookahead = _tokenizer.next();
+    if (_lookahead.id == Token::BAD_TOKEN)
+        return bad_token_error();
+
+    return true;
+}
+
+bool Parser::expect(char tk)
+{
+    if (_lookahead.id != static_cast<Token::Id>(tk))
         return syntax_error();
 
-    ++_rest;
-    return true;
+    return next();
 }
 
 bool Parser::read_number()
 {
-    const char* start = _rest;
-    char* end;
-
-    double result = std::strtod(start, &end);
+    char *end;
+    double result = std::strtod(_lookahead.start, &end);
 
     /* TODO should check errno to return overflow error */
-    if (*end & 0x80)
-        return bad_token_error();
-    else if (end == start)
-        return syntax_error();
+    if (static_cast<std::size_t>(end-_lookahead.start) != _lookahead.length)
+        return syntax_error(); // XXX Should return an internal_error instead
 
-    _rest = end;
-    return _handler.handle_literal(result);
-}
-
-bool Parser::read_identifier()
-{
-    const char* curr = _rest;
-
-    if (*curr & 0x80)
-        return bad_token_error();
-
-    else if (*curr != '_' && !std::isalpha((unsigned int)*curr))
-        return syntax_error();
-
-    for(;;)
-    {
-        ++curr;
-        if (*curr & 0x80)
-            return bad_token_error();
-        else if (*curr != '_' && !std::isalnum((unsigned int)*curr))
-        {
-            _rest = curr;
-            return true;
-        }
-
-    }
+    return next() && _handler.handle_literal(result);
 }
 
 
@@ -106,14 +77,10 @@ bool Parser::read_identifier()
 */
 bool Parser::read_call()
 {
-    next(); // skip potential white spaces -- it does not cost much
+    const Token head = _lookahead;
+    // XXX Check if lookhead.id is really a SYMBOL
 
-    const char*   id_start = _rest;
-    if (!read_identifier())
-        return false;
-
-    const char* id_end = _rest;
-    return expect('(') && read_expr() && expect(')') && _handler.handle_call(id_start, id_end-id_start);
+    return next() && expect('(') && read_expr() && expect(')') && _handler.handle_call(head.start, head.length);
 }
 
 /**
@@ -124,28 +91,24 @@ bool Parser::read_call()
 */
 bool Parser::read_term()
 {
-    char n = next();
-
-    if (n == '(')
+    if (_lookahead.id == '(')
     {
-        ++_rest;
-        return read_expr() && expect(')');
+        return next() && read_expr() && expect(')');
     }
-    else if (n == '+')
+    else if (_lookahead.id == '+')
     {
-        ++_rest;
-        return read_term();
+        return next() && read_term();
     }
-    else if ((n & 0x80)==0)
+    else if (_lookahead.id == Token::NUMBER)
     {
-        if (std::isdigit(n))
-            return read_number();
-        else
-            return read_call();
+        return read_number();
+    }
+    else if (_lookahead.id == Token::SYMBOL)
+    {
+        return read_call();
     }
 
-    // n is outside the 0-127 range
-    return bad_token_error();
+    return syntax_error();
 }
 
 /**
@@ -158,18 +121,14 @@ bool Parser::read_prod()
 
     while(true)
     {
-        char n = next();
-
-        if (n=='*')
+        if (_lookahead.id == '*')
         {
-            ++_rest;
-            if (read_term() and _handler.handle_product())
+            if (next() && read_term() && _handler.handle_product())
                 continue;
         }
-        else if (n=='/')
+        else if (_lookahead.id=='/')
         {
-            ++_rest;
-            if (read_term() and _handler.handle_division())
+            if (next() && read_term() && _handler.handle_division())
                 continue;
         }
         else
@@ -190,18 +149,14 @@ bool Parser::read_sum()
 
     while(true)
     {
-        char n = next();
-
-        if (n=='+')
+        if (_lookahead.id=='+')
         {
-            ++_rest;
-            if (read_prod() and _handler.handle_sum())
+            if (next() && read_prod() && _handler.handle_sum())
                 continue;
         }
-        else if (n=='-')
+        else if (_lookahead.id=='-')
         {
-            ++_rest;
-            if (read_prod() and _handler.handle_difference())
+            if (next() && read_prod() && _handler.handle_difference())
                 continue;
         }
         else
@@ -256,7 +211,7 @@ bool Parser::parse()
 
     Monitor   monitor{_state};
 
-    return read_expr() && expect('\00') && monitor.done();
+    return next() && read_expr() && expect('\00') && monitor.done();
 }
 
 //========================================================================
@@ -269,7 +224,7 @@ std::string   Parser::where() const
     char    line2[LINE_LEN];
 
     std::snprintf(line1, LINE_LEN, "%s\n", _start);
-    std::snprintf(line2, LINE_LEN, "%*c\n", (int)(_rest-_start+1), '^');
+    std::snprintf(line2, LINE_LEN, "%*c\n", static_cast<int>(_lookahead.start - _start), '^');
 
     return std::string(line1) + line2;
 }

@@ -16,14 +16,17 @@ struct Token
         SLASH           = '/',
         TIMES           = '*',
 
+        LPAR            = '(',
+        RPAR            = ')',
+
         SYMBOL          = 256,
         NUMBER,
     };
 
-    const Id          id;
+    /*const*/ Id          id;
 
-    const char* const start;
-    const std::size_t length;
+    const char* /*const*/ start;
+    /*const*/ std::size_t length;
 
     inline operator bool() const { return id != END; }
 };

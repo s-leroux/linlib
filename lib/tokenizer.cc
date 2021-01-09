@@ -1,4 +1,5 @@
 #include <cctype>
+#include <cstring>
 
 #include "lib/tokenizer.h"
 
@@ -94,7 +95,7 @@ Token   Tokenizer::next()
         return symbol();
     else if (*_rest == '.' || isdigit(*_rest))
         return number();
-    else if (*_rest == '+' || *_rest == '-' || *_rest == '/' || *_rest == '*')
+    else if (std::strchr("+-*/()", *_rest))
         return operator1();
     else
         return bad_token();

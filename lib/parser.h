@@ -3,6 +3,8 @@
 
 #include <stack>
 
+#include "lib/tokenizer.h"
+
 namespace linlib {
 
 class EventHandler
@@ -41,7 +43,8 @@ class Parser
     private:
     State                   _state;
     const char*             _start;
-    const char*             _rest;
+    Tokenizer               _tokenizer;
+    Token                   _lookahead = { Token::END, "", 0 };
 
     EventHandler&           _handler;
 
@@ -67,21 +70,18 @@ class Parser
     Parser(const char* expr, EventHandler& handler)
       : _state(OK),
         _start(expr),
-        _rest(expr),
+        _tokenizer(expr),
         _handler(handler)
     {
     }
 
-    /**
-      Advance to the next character of the input, skipping white spaces
-    */
-    char next();
+    bool   next();
 
     /**
-      Consume the given character if found in the stream, otherwise
+      Consume the given token if found in the stream, otherwise
       report an error.
     */
-    bool expect(char c);
+    bool expect(char tk);
 
     bool read_identifier();
     bool read_number();
