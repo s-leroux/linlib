@@ -15,6 +15,19 @@ static int isalnum(char c)
     return (c ^ 0x80) && std::isalnum(static_cast<unsigned char>(c));
 }
 
+/**
+    Emit a token matching a 1-character wide operator
+*/
+Token   Tokenizer::operator1()
+{
+
+    const char *curr = _rest++;
+
+    // the _trick_ here is the Token::Id enum uses character code for 1-character
+    // wide tokens.
+    return { (Token::Id)*curr, curr, 1 };
+}
+
 Token   Tokenizer::bad_token()
 {
     const char *start = _rest;
@@ -81,9 +94,11 @@ Token   Tokenizer::next()
         return symbol();
     else if (*_rest == '.' || isdigit(*_rest))
         return number();
+    else if (*_rest == '+' || *_rest == '-' || *_rest == '/' || *_rest == '*')
+        return operator1();
     else
         return bad_token();
-      
+
 
 }
 

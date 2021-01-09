@@ -23,17 +23,16 @@ void test_tokens(const char* testcase, std::initializer_list<linlib::Token::Id> 
         auto token = tokenizer.next();
 
         fprintf(stderr, "%d/%d %.*s\n", token.id, id, (int)token.length, token.start);
-        ASSERT_EQ(token.id, id) << testcase;
+        EXPECT_EQ(token.id, id) << testcase;
     }
 }
 
 // ========================================================================
 //  Tokenize!
 // ========================================================================
-TEST(Parser, tokenize) {
+TEST(Parser, reject_multibyte_chars) {
     using Token = linlib::Token;
 
-    test_tokens(" xxxxx 4", { Token::SYMBOL, Token::NUMBER, Token::END });
     test_tokens(" xxøxx 4", { Token::SYMBOL, Token::BAD_TOKEN, Token::SYMBOL, Token::NUMBER, Token::END });
 }
 
@@ -54,4 +53,21 @@ TEST(Parser, numbers) {
             Token::NUMBER,
             Token::END,
         });
+}
+
+TEST(Parser, core_tokens) {
+    using Token = linlib::Token;
+
+    test_tokens(" xxxxx 4", { Token::SYMBOL, Token::NUMBER, Token::END });
+}
+
+TEST(Parser, operators) {
+    using Token = linlib::Token;
+
+    test_tokens("1+2 *-3/", {
+        Token::NUMBER, Token::PLUS,
+        Token::NUMBER, Token::TIMES, Token::MINUS,
+        Token::NUMBER, Token::SLASH,
+        Token::END,
+    });
 }

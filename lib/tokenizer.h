@@ -8,9 +8,15 @@ struct Token
 {
     enum Id
     {
-        BAD_TOKEN   = -1,
-        END         = 0,
-        SYMBOL,
+        BAD_TOKEN       = -1,
+        END             = 0,
+
+        PLUS            = '+',
+        MINUS           = '-',
+        SLASH           = '/',
+        TIMES           = '*',
+
+        SYMBOL          = 256,
         NUMBER,
     };
 
@@ -29,6 +35,7 @@ class Tokenizer
     Token bad_token();
     Token symbol();
     Token number();
+    Token operator1();
 
     public:
     Tokenizer(const char* expr) : _rest(expr) {}
