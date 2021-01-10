@@ -19,20 +19,20 @@ static int isalnum(char c)
 /**
     Emit a token matching a 1-character wide operator
 */
-Token   Tokenizer::operator1()
+Token   Tokenizer::token1(Token::Id id)
 {
 
     const char *curr = _rest++;
 
     // the _trick_ here is the Token::Id enum uses character code for 1-character
     // wide tokens.
-    return { (Token::Id)*curr, curr, 1 };
+    return { id, curr, 1 };
 }
 
 /**
     Emit a token matching a 2-character wide operator
 */
-Token   Tokenizer::operator2(Token::Id id)
+Token   Tokenizer::token2(Token::Id id)
 {
 
     const char *curr = _rest;
@@ -112,12 +112,12 @@ Token   Tokenizer::next()
         return number();
     else if (*_rest == '*') {
         if (_rest[1] == '*')
-            return operator2(Token::POW);
+            return token2(Token::POW);
         else
-            return operator1();
+            return token1(Token::TIMES);
     }
     else if (std::strchr("+-*/()", *_rest))
-        return operator1();
+        return token1(static_cast<Token::Id>(*_rest));
     else
         return bad_token();
 

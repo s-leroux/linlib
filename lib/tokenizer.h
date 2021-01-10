@@ -11,18 +11,18 @@ struct Token
         BAD_TOKEN       = -1,
         END             = 0,
 
+        LPAR            = '(',
+        RPAR            = ')',
+
         PLUS            = '+',
         MINUS           = '-',
         SLASH           = '/',
         TIMES           = '*',
 
-        LPAR            = '(',
-        RPAR            = ')',
+        POW             = 0x0100,
 
-        SYMBOL          = 256,
+        SYMBOL          = 0x0200,
         NUMBER,
-
-        POW,
     };
 
     /*const*/ Id          id;
@@ -40,8 +40,9 @@ class Tokenizer
     Token bad_token();
     Token symbol();
     Token number();
-    Token operator1();
-    Token operator2(Token::Id id);
+
+    Token token1(Token::Id id);
+    Token token2(Token::Id id);
 
     public:
     Tokenizer(const char* expr) : _rest(expr) {}

@@ -23,9 +23,10 @@ struct EH : public linlib::EventHandler
         { "sqrt", std::sqrt },
     };
 
-    void push(double v)
+    bool push(double v)
     {
         *_sp++ = v;
+        return true;
     }
 
     double pop()
@@ -59,34 +60,26 @@ struct EH : public linlib::EventHandler
         return true;
     }
 
-    bool handle_division()
+    bool handle_operator(linlib::OpCode opcode)
     {
         double b = pop(),
                a = pop();
-        push(a/b);
-        return true;
-    }
 
-    bool handle_sum()
-    {
-        push(pop() + pop());
-        return true;
-    }
+        switch(opcode)
+        {
+            case linlib::OpCode::ADD:
+                return push(a+b);
+            case linlib::OpCode::SUB:
+                return push(a-b);
+            case linlib::OpCode::MUL:
+                return push(a*b);
+            case linlib::OpCode::DIV:
+                return push(a/b);
+            case linlib::OpCode::POW:
+                return push(std::pow(a,b));
+        };
 
-    bool handle_difference()
-    {
-        double b = pop(),
-               a = pop();
-        push(a-b);
-        return true;
-    }
-
-    bool handle_pow()
-    {
-        double b = pop(),
-               a = pop();
-        push(std::pow(a,b));
-        return true;
+        return false;
     }
 };
 

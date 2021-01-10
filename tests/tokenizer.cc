@@ -14,7 +14,7 @@
 // ========================================================================
 //  Helpers
 // ========================================================================
-void test_tokens(const char* testcase, std::initializer_list<linlib::Token::Id> ids)
+void test_tokens(const char* testcase, std::initializer_list<int> ids)
 {
     linlib::Tokenizer tokenizer{testcase};
 

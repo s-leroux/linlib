@@ -41,29 +41,23 @@ struct NEH : public linlib::EventHandler
         return !(mode & LITERAL);
     }
 
-    bool handle_product()
+    bool handle_operator(linlib::OpCode opcode)
     {
-        return !(mode & PRODUCT);
-    }
+        switch(opcode)
+        {
+            case linlib::OpCode::ADD:
+                return !(mode & SUM);
+            case linlib::OpCode::SUB:
+                return !(mode & DIFFERENCE);
+            case linlib::OpCode::MUL:
+                return !(mode & PRODUCT);
+            case linlib::OpCode::DIV:
+                return !(mode & DIVISION);
+            case linlib::OpCode::POW:
+                return !(mode & POW);
+        };
 
-    bool handle_division()
-    {
-        return !(mode & DIVISION);
-    }
-
-    bool handle_sum()
-    {
-        return !(mode & SUM);
-    }
-
-    bool handle_difference()
-    {
-        return !(mode & DIFFERENCE);
-    }
-
-    bool handle_pow()
-    {
-        return !(mode & POW);
+        return false;
     }
 };
 

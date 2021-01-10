@@ -9,11 +9,11 @@ struct EH : public linlib::EventHandler
     std::string  _stack;
 
     template<class T>
-    void push(const T& v) { _stack = _stack + std::to_string(v) + ";"; }
-    void push(const char* v) { _stack = _stack + v + ";"; }
+    bool push(const T& v) { _stack = _stack + std::to_string(v) + ";"; return true; }
+    bool push(const char* v) { _stack = _stack + v + ";"; return true; }
 
     template<std::size_t N>
-    void push(const char (&v)[N]) { _stack = _stack + v + ";"; }
+    bool push(const char (&v)[N]) { _stack = _stack + v + ";"; return true; }
 
     bool handle_call(const char *identifier, std::size_t len)
     {
@@ -30,34 +30,23 @@ struct EH : public linlib::EventHandler
       return true;
     }
 
-    bool handle_product()
+    bool handle_operator(linlib::OpCode opcode)
     {
-      push("MUL");
-      return true;
-    }
+      switch(opcode)
+      {
+          case linlib::OpCode::ADD:
+              return push("ADD");
+          case linlib::OpCode::SUB:
+              return push("SUB");
+          case linlib::OpCode::MUL:
+              return push("MUL");
+          case linlib::OpCode::DIV:
+              return push("DIV");
+          case linlib::OpCode::POW:
+              return push("POW");
 
-    bool handle_division()
-    {
-      push("DIV");
-      return true;
-    }
-
-    bool handle_sum()
-    {
-      push("ADD");
-      return true;
-    }
-
-    bool handle_difference()
-    {
-      push("SUB");
-      return true;
-    }
-
-    bool handle_pow()
-    {
-      push("POW");
-      return true;
+          default:  return false;
+      };
     }
 };
 

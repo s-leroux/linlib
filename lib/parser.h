@@ -7,8 +7,20 @@
 
 namespace linlib {
 
+enum struct OpCode
+{
+    ADD       = '+',
+    SUB       = '-',
+    MUL       = '*',
+    DIV       = '/',
+
+    POW       = 0x0100,
+};
+
 class EventHandler
 {
+    public:
+
     protected:
     virtual void error(const char* str) const { throw str; }
 
@@ -17,11 +29,7 @@ class EventHandler
 
     virtual bool handle_literal(double value) = 0;
     virtual bool handle_call(const char *identifier, std::size_t len) = 0;
-    virtual bool handle_product() = 0;
-    virtual bool handle_division() = 0;
-    virtual bool handle_sum() = 0;
-    virtual bool handle_difference() = 0;
-    virtual bool handle_pow() = 0;
+    virtual bool handle_operator(OpCode opcode) = 0;
 
     virtual void bad_token_error(const char* stmt, unsigned pos);
     virtual void syntax_error(const char* stmt, unsigned pos);
@@ -82,7 +90,7 @@ class Parser
       Consume the given token if found in the stream, otherwise
       report an error.
     */
-    bool expect(char tk);
+    bool expect(Token::Id id);
 
     bool read_identifier();
     bool read_number();

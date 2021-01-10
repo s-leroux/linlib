@@ -51,9 +51,9 @@ bool Parser::next()
     return true;
 }
 
-bool Parser::expect(char tk)
+bool Parser::expect(Token::Id id)
 {
-    if (_lookahead.id != static_cast<Token::Id>(tk))
+    if (_lookahead.id != id)
         return syntax_error();
 
     return next();
@@ -80,7 +80,7 @@ bool Parser::read_call()
     const Token head = _lookahead;
     // XXX Check if lookhead.id is really a SYMBOL
 
-    return next() && expect('(') && read_expr() && expect(')') && _handler.handle_call(head.start, head.length);
+    return next() && expect(Token::LPAR) && read_expr() && expect(Token::RPAR) && _handler.handle_call(head.start, head.length);
 }
 
 /**
@@ -93,7 +93,7 @@ bool Parser::read_term()
 {
     if (_lookahead.id == '(')
     {
-        return next() && read_expr() && expect(')');
+        return next() && read_expr() && expect(Token::RPAR);
     }
     else if (_lookahead.id == '+')
     {
@@ -123,7 +123,7 @@ bool Parser::read_pow()
     {
         if (_lookahead.id == Token::POW)
         {
-            if (next() && read_term() && _handler.handle_pow())
+            if (next() && read_term() && _handler.handle_operator(OpCode::POW))
                 continue;
         }
         else
@@ -146,12 +146,12 @@ bool Parser::read_prod()
     {
         if (_lookahead.id == '*')
         {
-            if (next() && read_pow() && _handler.handle_product())
+            if (next() && read_pow() && _handler.handle_operator(OpCode::MUL))
                 continue;
         }
-        else if (_lookahead.id=='/')
+        else if (_lookahead.id == '/')
         {
-            if (next() && read_pow() && _handler.handle_division())
+            if (next() && read_pow() && _handler.handle_operator(OpCode::DIV))
                 continue;
         }
         else
@@ -174,12 +174,12 @@ bool Parser::read_sum()
     {
         if (_lookahead.id=='+')
         {
-            if (next() && read_prod() && _handler.handle_sum())
+            if (next() && read_prod() && _handler.handle_operator(OpCode::ADD))
                 continue;
         }
         else if (_lookahead.id=='-')
         {
-            if (next() && read_prod() && _handler.handle_difference())
+            if (next() && read_prod() && _handler.handle_operator(OpCode::SUB))
                 continue;
         }
         else
@@ -234,7 +234,7 @@ bool Parser::parse()
 
     Monitor   monitor{_state};
 
-    return next() && read_expr() && expect('\00') && monitor.done();
+    return next() && read_expr() && expect(Token::END) && monitor.done();
 }
 
 //========================================================================
