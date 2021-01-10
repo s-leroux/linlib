@@ -80,6 +80,14 @@ struct EH : public linlib::EventHandler
         push(a-b);
         return true;
     }
+
+    bool handle_pow()
+    {
+        double b = pop(),
+               a = pop();
+        push(std::pow(a,b));
+        return true;
+    }
 };
 
 void test(const char* testcase, double expected)
@@ -87,8 +95,8 @@ void test(const char* testcase, double expected)
     EH eh;
     linlib::Parser  parser{testcase, eh};
 
-    ASSERT_TRUE(parser.parse());
-    EXPECT_EQ(eh.pop(), expected);
+    ASSERT_TRUE(parser.parse()) << testcase << " == " << expected;
+    EXPECT_EQ(eh.pop(), expected) << testcase << " == " << expected;
 }
 
 
@@ -103,6 +111,7 @@ TEST(Parser, should_pass) {
     test(" 1 * 2-3 ", -1.0);
     test(" 1 * 2/4 ", 0.5);
     test(" sqrt(4)", 2);
+    test(" 1+2**3", 9);
 }
 
 TEST(Parser, should_fail) {

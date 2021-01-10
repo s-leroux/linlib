@@ -21,6 +21,7 @@ class EventHandler
     virtual bool handle_division() = 0;
     virtual bool handle_sum() = 0;
     virtual bool handle_difference() = 0;
+    virtual bool handle_pow() = 0;
 
     virtual void bad_token_error(const char* stmt, unsigned pos);
     virtual void syntax_error(const char* stmt, unsigned pos);
@@ -88,6 +89,7 @@ class Parser
 
     bool read_sum();
     bool read_prod();
+    bool read_pow();
 
     bool read_call();
     bool read_term();

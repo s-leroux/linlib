@@ -53,6 +53,12 @@ struct EH : public linlib::EventHandler
       push("SUB");
       return true;
     }
+
+    bool handle_pow()
+    {
+      push("POW");
+      return true;
+    }
 };
 
 template<std::size_t N>
@@ -148,6 +154,22 @@ TEST(Parser, parse_difference)
     "12.000000;"
     "3.000000;"
     "SUB;"
+  );
+}
+
+
+TEST(Parser, parse_pow)
+{
+  const char*  testcases[] = {
+    "12**3",
+    "12 ** 3",
+    "+ 12 ** + 3",
+  };
+
+  test(testcases,
+    "12.000000;"
+    "3.000000;"
+    "POW;"
   );
 }
 
@@ -265,14 +287,17 @@ TEST(Parser, assoc_4)
 TEST(Parser, precedence_1)
 {
   const char*  testcases[] = {
-    "12 + 3 * 4",
-    "12 + ( 3 * 4 )",
+    "12 + 3 ** 4 * 5",
+    "12 + ( 3 ** 4 * 5)",
+    "12 + ( ( 3 ** 4 ) * 5)",
   };
 
   test(testcases,
         "12.000000;"
         "3.000000;"
         "4.000000;"
+        "POW;"
+        "5.000000;"
         "MUL;"
         "ADD;"
   );

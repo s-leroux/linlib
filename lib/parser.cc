@@ -114,21 +114,44 @@ bool Parser::read_term()
 /**
     prod := term [ '*' term ]*
 */
-bool Parser::read_prod()
+bool Parser::read_pow()
 {
     if (!read_term())
         return false;
 
     while(true)
     {
+        if (_lookahead.id == Token::POW)
+        {
+            if (next() && read_term() && _handler.handle_pow())
+                continue;
+        }
+        else
+            return true;
+
+        // otherwise
+        return false;
+    }
+}
+
+/**
+    prod := pow [ '*' pow ]*
+*/
+bool Parser::read_prod()
+{
+    if (!read_pow())
+        return false;
+
+    while(true)
+    {
         if (_lookahead.id == '*')
         {
-            if (next() && read_term() && _handler.handle_product())
+            if (next() && read_pow() && _handler.handle_product())
                 continue;
         }
         else if (_lookahead.id=='/')
         {
-            if (next() && read_term() && _handler.handle_division())
+            if (next() && read_pow() && _handler.handle_division())
                 continue;
         }
         else

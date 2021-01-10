@@ -21,6 +21,8 @@ struct Token
 
         SYMBOL          = 256,
         NUMBER,
+
+        POW,
     };
 
     /*const*/ Id          id;
@@ -39,6 +41,7 @@ class Tokenizer
     Token symbol();
     Token number();
     Token operator1();
+    Token operator2(Token::Id id);
 
     public:
     Tokenizer(const char* expr) : _rest(expr) {}

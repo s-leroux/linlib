@@ -29,6 +29,21 @@ Token   Tokenizer::operator1()
     return { (Token::Id)*curr, curr, 1 };
 }
 
+/**
+    Emit a token matching a 2-character wide operator
+*/
+Token   Tokenizer::operator2(Token::Id id)
+{
+
+    const char *curr = _rest;
+
+    _rest += 2;
+
+    // the _trick_ here is the Token::Id enum uses character code for 1-character
+    // wide tokens.
+    return { id, curr, 2 };
+}
+
 Token   Tokenizer::bad_token()
 {
     const char *start = _rest;
@@ -95,6 +110,12 @@ Token   Tokenizer::next()
         return symbol();
     else if (*_rest == '.' || isdigit(*_rest))
         return number();
+    else if (*_rest == '*') {
+        if (_rest[1] == '*')
+            return operator2(Token::POW);
+        else
+            return operator1();
+    }
     else if (std::strchr("+-*/()", *_rest))
         return operator1();
     else

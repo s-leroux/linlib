@@ -24,6 +24,7 @@ struct NEH : public linlib::EventHandler
         DIVISION    = 0x0008,
         SUM         = 0x0010,
         DIFFERENCE  = 0x0020,
+        POW         = 0x0040,
     };
 
     int   mode;
@@ -58,6 +59,11 @@ struct NEH : public linlib::EventHandler
     bool handle_difference()
     {
         return !(mode & DIFFERENCE);
+    }
+
+    bool handle_pow()
+    {
+        return !(mode & POW);
     }
 };
 
@@ -154,6 +160,7 @@ TEST(Parser, syntax_error) {
     test_syntax_error("cos(2)(3)");
     test_syntax_error("cos(2))");
     test_syntax_error("*2");
+    test_syntax_error("2* *4"); // do not mistaken '* *' for '**'
 }
 
 // ========================================================================

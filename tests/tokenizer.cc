@@ -64,10 +64,11 @@ TEST(Parser, core_tokens) {
 TEST(Parser, operators) {
     using Token = linlib::Token;
 
-    test_tokens("1+2 *-3/", {
+    test_tokens("1+2 *-3/5**", {
         Token::NUMBER, Token::PLUS,
         Token::NUMBER, Token::TIMES, Token::MINUS,
         Token::NUMBER, Token::SLASH,
+        Token::NUMBER, Token::POW,
         Token::END,
     });
 }
