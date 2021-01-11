@@ -26,221 +26,283 @@ void EventHandler::syntax_error(const char* stmt, unsigned pos)
     error_helper("Syntax error", stmt, pos);
 }
 
-bool Parser::bad_token_error()
+//========================================================================
+//  Engine
+//========================================================================
+class ParserEngine
 {
-    _handler.bad_token_error(_start, static_cast<std::size_t>(_lookahead.start-_start));
-    _state = BAD_TOKEN_ERROR;
+    private:
+    Parser::State&          _state;
+    const char*             _start;
+    Tokenizer               _tokenizer;
+    Token&                  _lookahead;
 
-    return false;
-}
+    EventHandler&           _handler;
 
-bool Parser::syntax_error()
-{
-    _handler.syntax_error(_start, static_cast<std::size_t>(_lookahead.start-_start));
-    _state = SYNTAX_ERROR;
+    /**
+        Report a bad token to the event handler.
+        Change the state of the parser.
 
-    return false;
-}
+        A bad token is an unexpected character in the input stream. Only
+        characters in the 7-bits ASCII range are allowed in an expression.
+    */
+    bool  bad_token_error()
+    {
+        _handler.bad_token_error(_start, static_cast<std::size_t>(_lookahead.start-_start));
+        _state = Parser::BAD_TOKEN_ERROR;
 
-bool Parser::next()
-{
-    _lookahead = _tokenizer.next();
-    if (_lookahead.id == Token::BAD_TOKEN)
-        return bad_token_error();
+        return false;
+    }
 
-    return true;
-}
+    /**
+        Report a syntax error to the event handler.
+        Change the state of the parser.
 
-bool Parser::expect(Token::Id id)
-{
-    if (_lookahead.id != id)
+        Syntax errors occur when an expression does not follow the
+        grammar rules for the language.
+    */
+    bool  syntax_error()
+    {
+        _handler.syntax_error(_start, static_cast<std::size_t>(_lookahead.start-_start));
+        _state = Parser::SYNTAX_ERROR;
+
+        return false;
+    }
+
+    /**
+        Read the next token from the input stream.
+
+        Raise a bad_token_error is the next token was not recognized
+        by the tokenizer.
+    */
+    bool   next()
+    {
+        _lookahead = _tokenizer.next();
+        if (_lookahead.id == Token::BAD_TOKEN)
+            return bad_token_error();
+
+        return true;
+    }
+
+    /**
+      Consume the given token if found in the stream, otherwise
+      report an error.
+    */
+    bool expect(Token::Id id)
+    {
+        if (_lookahead.id != id)
+            return syntax_error();
+
+        return next();
+    }
+
+    /**
+        Parse a number.
+
+        Raise a sytax_error if the token can't be converted to
+        a double.
+    */
+    bool read_number()
+    {
+        char *end;
+        double result = std::strtod(_lookahead.start, &end);
+
+        /* TODO should check errno to return overflow error */
+        if (static_cast<std::size_t>(end-_lookahead.start) != _lookahead.length)
+            return syntax_error(); // XXX Should return an internal_error instead
+
+        return next() && _handler.handle_literal(result);
+    }
+
+
+
+    /**
+        call := identifier '(' expr ')'
+    */
+    bool read_call()
+    {
+        const Token head = _lookahead;
+        // XXX Check if lookhead.id is really a SYMBOL
+
+        return next() && expect(Token::LPAR) && read_expr() && expect(Token::RPAR) && _handler.handle_call(head.start, head.length);
+    }
+
+    /**
+        term := number
+                | '+' term
+                | '-' term
+                | '(' expr ')'
+                | call
+    */
+    bool read_term()
+    {
+        if (_lookahead.id == '(')
+        {
+            return next() && read_expr() && expect(Token::RPAR);
+        }
+        else if (_lookahead.id == '+')
+        {
+            return next() && read_term();
+        }
+        else if (_lookahead.id == '-')
+        {
+            return next() && read_term() && _handler.handle_unary_operator(UnaryOpCode::NEG);
+        }
+        else if (_lookahead.id == Token::NUMBER)
+        {
+            return read_number();
+        }
+        else if (_lookahead.id == Token::SYMBOL)
+        {
+            return read_call();
+        }
+
         return syntax_error();
-
-    return next();
-}
-
-bool Parser::read_number()
-{
-    char *end;
-    double result = std::strtod(_lookahead.start, &end);
-
-    /* TODO should check errno to return overflow error */
-    if (static_cast<std::size_t>(end-_lookahead.start) != _lookahead.length)
-        return syntax_error(); // XXX Should return an internal_error instead
-
-    return next() && _handler.handle_literal(result);
-}
-
-
-/**
-    call := identifier '(' expr ')'
-*/
-bool Parser::read_call()
-{
-    const Token head = _lookahead;
-    // XXX Check if lookhead.id is really a SYMBOL
-
-    return next() && expect(Token::LPAR) && read_expr() && expect(Token::RPAR) && _handler.handle_call(head.start, head.length);
-}
-
-/**
-    term := number
-            | '+' term
-            | '-' term
-            | '(' expr ')'
-            | call
-*/
-bool Parser::read_term()
-{
-    if (_lookahead.id == '(')
-    {
-        return next() && read_expr() && expect(Token::RPAR);
-    }
-    else if (_lookahead.id == '+')
-    {
-        return next() && read_term();
-    }
-    else if (_lookahead.id == '-')
-    {
-        return next() && read_term() && _handler.handle_unary_operator(UnaryOpCode::NEG);
-    }
-    else if (_lookahead.id == Token::NUMBER)
-    {
-        return read_number();
-    }
-    else if (_lookahead.id == Token::SYMBOL)
-    {
-        return read_call();
     }
 
-    return syntax_error();
-}
-
-/**
-    prod := term [ '*' term ]*
-*/
-bool Parser::read_pow()
-{
-    if (!read_term())
-        return false;
-
-    while(true)
+    /**
+        prod := term [ '*' term ]*
+    */
+    bool read_pow()
     {
-        if (_lookahead.id == Token::POW)
+        if (!read_term())
+            return false;
+
+        while(true)
         {
-            if (next() && read_term() && _handler.handle_binary_operator(BinaryOpCode::POW))
-                continue;
+            if (_lookahead.id == Token::POW)
+            {
+                if (next() && read_term() && _handler.handle_binary_operator(BinaryOpCode::POW))
+                    continue;
+            }
+            else
+                return true;
+
+            // otherwise
+            return false;
         }
-        else
-            return true;
-
-        // otherwise
-        return false;
     }
-}
 
-/**
-    prod := pow [ '*' pow ]*
-*/
-bool Parser::read_prod()
-{
-    if (!read_pow())
-        return false;
-
-    while(true)
+    /**
+        prod := pow [ '*' pow ]*
+    */
+    bool read_prod()
     {
-        if (_lookahead.id == '*')
-        {
-            if (next() && read_pow() && _handler.handle_binary_operator(BinaryOpCode::MUL))
-                continue;
-        }
-        else if (_lookahead.id == '/')
-        {
-            if (next() && read_pow() && _handler.handle_binary_operator(BinaryOpCode::DIV))
-                continue;
-        }
-        else
-            return true;
+        if (!read_pow())
+            return false;
 
-        // otherwise
-        return false;
+        while(true)
+        {
+            if (_lookahead.id == '*')
+            {
+                if (next() && read_pow() && _handler.handle_binary_operator(BinaryOpCode::MUL))
+                    continue;
+            }
+            else if (_lookahead.id == '/')
+            {
+                if (next() && read_pow() && _handler.handle_binary_operator(BinaryOpCode::DIV))
+                    continue;
+            }
+            else
+                return true;
+
+            // otherwise
+            return false;
+        }
     }
-}
 
-/**
-    sum := prod [ '+'|'-' prod ]*
-*/
-bool Parser::read_sum()
-{
-    if (!read_prod())
-        return false;
-
-    while(true)
+    /**
+        sum := prod [ '+'|'-' prod ]*
+    */
+    bool read_sum()
     {
-        if (_lookahead.id=='+')
-        {
-            if (next() && read_prod() && _handler.handle_binary_operator(BinaryOpCode::ADD))
-                continue;
-        }
-        else if (_lookahead.id=='-')
-        {
-            if (next() && read_prod() && _handler.handle_binary_operator(BinaryOpCode::SUB))
-                continue;
-        }
-        else
-            return true;
+        if (!read_prod())
+            return false;
 
-        // otherwise
-        return false;
+        while(true)
+        {
+            if (_lookahead.id=='+')
+            {
+                if (next() && read_prod() && _handler.handle_binary_operator(BinaryOpCode::ADD))
+                    continue;
+            }
+            else if (_lookahead.id=='-')
+            {
+                if (next() && read_prod() && _handler.handle_binary_operator(BinaryOpCode::SUB))
+                    continue;
+            }
+            else
+                return true;
+
+            // otherwise
+            return false;
+        }
     }
-}
 
-/**
-    expr := sum
-*/
-bool Parser::read_expr()
-{
-    return read_sum();
-/*
-    char n = next();
-    switch(n)
+    /**
+        expr := sum
+    */
+    bool read_expr()
     {
-        case '+':
-            break;
-
-        default:
-            _handler.bad_token_error();
+        return read_sum();
     }
-*/
-}
 
+    public:
+    ParserEngine(Parser::State& state, const char* start, Token& lookahead, EventHandler& eh)
+      : _state(state),
+        _start(start),
+        _tokenizer(start),
+        _lookahead(lookahead),
+        _handler(eh)
+    {
+    }
+
+    bool  parse()
+    {
+        class Monitor
+        {
+            Parser::State& _state;
+            Parser::State  _end_state = Parser::INTERNAL_ERROR;
+
+            public:
+            Monitor(Parser::State &state)
+              : _state(state), _end_state(Parser::INTERNAL_ERROR)
+            {
+                _state = Parser::RUNNING;
+            }
+
+            ~Monitor()
+            {
+                if (_state == Parser::RUNNING)
+                    _state = _end_state;
+            }
+
+            inline bool done(void)
+            {
+                _end_state = Parser::OK;
+                return true;
+            }
+        };
+
+        Monitor   monitor{_state};
+        return next() && read_expr() && expect(Token::END) && monitor.done();
+    }
+
+}; // class ParserEngine
+
+
+//========================================================================
+//  Public interface
+//========================================================================
 bool Parser::parse()
 {
-    class Monitor
-    {
-        State& _state;
-        State  _end_state = INTERNAL_ERROR;
+    Tokenizer tokenizer{_start};
 
-        public:
-        Monitor(State &state)
-          : _state(state), _end_state(INTERNAL_ERROR)
-        {
-            _state = RUNNING;
-        }
-
-        ~Monitor()
-        {
-            if (_state == RUNNING)
-                _state = _end_state;
-        }
-
-        inline bool done(void) { _end_state = OK; return true; }
-    };
-
-    Monitor   monitor{_state};
-
-    return next() && read_expr() && expect(Token::END) && monitor.done();
+    ParserEngine  engine{_state, _start, _lookahead, _handler};
+    return engine.parse();
 }
+
+
 
 //========================================================================
 //  Diagnostic
@@ -274,5 +336,6 @@ std::string   Parser::message() const
 {
     return what() + ":\n" + where();
 }
+
 
 } /* namespace */

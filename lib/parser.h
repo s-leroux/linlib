@@ -41,8 +41,6 @@ class EventHandler
     virtual void syntax_error(const char* stmt, unsigned pos);
 };
 
-void parse(const std::string& expr, EventHandler& handler);
-
 class Parser
 {
     public:
@@ -58,34 +56,15 @@ class Parser
     private:
     State                   _state;
     const char*             _start;
-    Tokenizer               _tokenizer;
-    Token                   _lookahead = { Token::END, "", 0 };
+    Token                   _lookahead;
 
     EventHandler&           _handler;
-
-    /**
-        Report a bad token to the event handler.
-        Change the state of the parser.
-
-        A bad token is an unexpected character in the input stream. Only
-        characters in the 7-bits ASCII range are allowed in an expression.
-    */
-    bool  bad_token_error();
-
-    /**
-        Report a syntax error to the event handler.
-        Change the state of the parser.
-
-        Syntax errors occurs when a construct does not follow the
-        grammar rules for expressions.
-    */
-    bool  syntax_error();
 
     public:
     Parser(const char* expr, EventHandler& handler)
       : _state(OK),
         _start(expr),
-        _tokenizer(expr),
+        _lookahead{ Token::END, "", 0 },
         _handler(handler)
     {
     }
