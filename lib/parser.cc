@@ -86,6 +86,7 @@ bool Parser::read_call()
 /**
     term := number
             | '+' term
+            | '-' term
             | '(' expr ')'
             | call
 */
@@ -98,6 +99,10 @@ bool Parser::read_term()
     else if (_lookahead.id == '+')
     {
         return next() && read_term();
+    }
+    else if (_lookahead.id == '-')
+    {
+        return next() && read_term() && _handler.handle_unary_operator(UnaryOpCode::NEG);
     }
     else if (_lookahead.id == Token::NUMBER)
     {
@@ -123,7 +128,7 @@ bool Parser::read_pow()
     {
         if (_lookahead.id == Token::POW)
         {
-            if (next() && read_term() && _handler.handle_operator(OpCode::POW))
+            if (next() && read_term() && _handler.handle_binary_operator(BinaryOpCode::POW))
                 continue;
         }
         else
@@ -146,12 +151,12 @@ bool Parser::read_prod()
     {
         if (_lookahead.id == '*')
         {
-            if (next() && read_pow() && _handler.handle_operator(OpCode::MUL))
+            if (next() && read_pow() && _handler.handle_binary_operator(BinaryOpCode::MUL))
                 continue;
         }
         else if (_lookahead.id == '/')
         {
-            if (next() && read_pow() && _handler.handle_operator(OpCode::DIV))
+            if (next() && read_pow() && _handler.handle_binary_operator(BinaryOpCode::DIV))
                 continue;
         }
         else
@@ -174,12 +179,12 @@ bool Parser::read_sum()
     {
         if (_lookahead.id=='+')
         {
-            if (next() && read_prod() && _handler.handle_operator(OpCode::ADD))
+            if (next() && read_prod() && _handler.handle_binary_operator(BinaryOpCode::ADD))
                 continue;
         }
         else if (_lookahead.id=='-')
         {
-            if (next() && read_prod() && _handler.handle_operator(OpCode::SUB))
+            if (next() && read_prod() && _handler.handle_binary_operator(BinaryOpCode::SUB))
                 continue;
         }
         else

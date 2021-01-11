@@ -25,6 +25,8 @@ struct NEH : public linlib::EventHandler
         SUM         = 0x0010,
         DIFFERENCE  = 0x0020,
         POW         = 0x0040,
+
+        NEG         = 0x1000,
     };
 
     int   mode;
@@ -41,19 +43,30 @@ struct NEH : public linlib::EventHandler
         return !(mode & LITERAL);
     }
 
-    bool handle_operator(linlib::OpCode opcode)
+    bool handle_unary_operator(linlib::UnaryOpCode opcode)
     {
         switch(opcode)
         {
-            case linlib::OpCode::ADD:
+            case linlib::UnaryOpCode::NEG:
+                return !(mode & NEG);
+        };
+
+        return false;
+    }
+
+    bool handle_binary_operator(linlib::BinaryOpCode opcode)
+    {
+        switch(opcode)
+        {
+            case linlib::BinaryOpCode::ADD:
                 return !(mode & SUM);
-            case linlib::OpCode::SUB:
+            case linlib::BinaryOpCode::SUB:
                 return !(mode & DIFFERENCE);
-            case linlib::OpCode::MUL:
+            case linlib::BinaryOpCode::MUL:
                 return !(mode & PRODUCT);
-            case linlib::OpCode::DIV:
+            case linlib::BinaryOpCode::DIV:
                 return !(mode & DIVISION);
-            case linlib::OpCode::POW:
+            case linlib::BinaryOpCode::POW:
                 return !(mode & POW);
         };
 

@@ -7,14 +7,19 @@
 
 namespace linlib {
 
-enum struct OpCode
+enum struct BinaryOpCode
 {
-    ADD       = '+',
-    SUB       = '-',
-    MUL       = '*',
-    DIV       = '/',
+    ADD,
+    SUB,
+    MUL,
+    DIV,
 
-    POW       = 0x0100,
+    POW,
+};
+
+enum struct UnaryOpCode
+{
+    NEG,
 };
 
 class EventHandler
@@ -29,7 +34,8 @@ class EventHandler
 
     virtual bool handle_literal(double value) = 0;
     virtual bool handle_call(const char *identifier, std::size_t len) = 0;
-    virtual bool handle_operator(OpCode opcode) = 0;
+    virtual bool handle_binary_operator(BinaryOpCode opcode) = 0;
+    virtual bool handle_unary_operator(UnaryOpCode opcode) = 0;
 
     virtual void bad_token_error(const char* stmt, unsigned pos);
     virtual void syntax_error(const char* stmt, unsigned pos);

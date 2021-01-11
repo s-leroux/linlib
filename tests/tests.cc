@@ -30,23 +30,35 @@ struct EH : public linlib::EventHandler
       return true;
     }
 
-    bool handle_operator(linlib::OpCode opcode)
+    bool handle_unary_operator(linlib::UnaryOpCode opcode)
     {
       switch(opcode)
       {
-          case linlib::OpCode::ADD:
+          case linlib::UnaryOpCode::NEG:
+              return push("NEG");
+      };
+
+      return false;
+    }
+
+    bool handle_binary_operator(linlib::BinaryOpCode opcode)
+    {
+      switch(opcode)
+      {
+          case linlib::BinaryOpCode::ADD:
               return push("ADD");
-          case linlib::OpCode::SUB:
+          case linlib::BinaryOpCode::SUB:
               return push("SUB");
-          case linlib::OpCode::MUL:
+          case linlib::BinaryOpCode::MUL:
               return push("MUL");
-          case linlib::OpCode::DIV:
+          case linlib::BinaryOpCode::DIV:
               return push("DIV");
-          case linlib::OpCode::POW:
+          case linlib::BinaryOpCode::POW:
               return push("POW");
 
-          default:  return false;
       };
+
+      return false;
     }
 };
 

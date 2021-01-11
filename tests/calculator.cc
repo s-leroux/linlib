@@ -60,22 +60,35 @@ struct EH : public linlib::EventHandler
         return true;
     }
 
-    bool handle_operator(linlib::OpCode opcode)
+    bool handle_unary_operator(linlib::UnaryOpCode opcode)
+    {
+        double x = pop();
+
+        switch(opcode)
+        {
+            case linlib::UnaryOpCode::NEG:
+                return push(-x);
+        };
+
+        return false;
+    }
+
+    bool handle_binary_operator(linlib::BinaryOpCode opcode)
     {
         double b = pop(),
                a = pop();
 
         switch(opcode)
         {
-            case linlib::OpCode::ADD:
+            case linlib::BinaryOpCode::ADD:
                 return push(a+b);
-            case linlib::OpCode::SUB:
+            case linlib::BinaryOpCode::SUB:
                 return push(a-b);
-            case linlib::OpCode::MUL:
+            case linlib::BinaryOpCode::MUL:
                 return push(a*b);
-            case linlib::OpCode::DIV:
+            case linlib::BinaryOpCode::DIV:
                 return push(a/b);
-            case linlib::OpCode::POW:
+            case linlib::BinaryOpCode::POW:
                 return push(std::pow(a,b));
         };
 
