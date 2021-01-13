@@ -69,12 +69,6 @@ struct EH : public linlib::EventHandler
         return true;
     }
 
-    bool handle_product()
-    {
-        push(pop() * pop());
-        return true;
-    }
-
     bool unary_op(linlib::UnaryOpCode opcode)
     {
         double x = pop();
