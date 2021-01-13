@@ -19,12 +19,13 @@ struct NEH : public linlib::EventHandler
     {
         NOTHING     = 0x0000,
         CALL        = 0x0001,
-        LITERAL     = 0x0002,
-        PRODUCT     = 0x0004,
-        DIVISION    = 0x0008,
-        SUM         = 0x0010,
-        DIFFERENCE  = 0x0020,
-        POW         = 0x0040,
+        IDENTIFIER  = 0x0002,
+        LITERAL     = 0x0004,
+        PRODUCT     = 0x0008,
+        DIVISION    = 0x0010,
+        SUM         = 0x0020,
+        DIFFERENCE  = 0x0040,
+        POW         = 0x0080,
 
         NEG         = 0x1000,
     };
@@ -36,6 +37,11 @@ struct NEH : public linlib::EventHandler
     bool handle_call(const char *identifier, std::size_t len)
     {
         return !(mode & CALL);
+    }
+
+    bool handle_identifier(const char *identifier, std::size_t len)
+    {
+        return !(mode & IDENTIFIER);
     }
 
     bool handle_literal(double v)

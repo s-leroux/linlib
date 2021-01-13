@@ -117,22 +117,29 @@ class ParserEngine
 
 
     /**
-        call := identifier '(' expr ')'
+        call := SYMBOL '(' expr ')'
+                | SYMBOL
     */
     bool read_call()
     {
-        const Token head = _lookahead;
+        const Token symbol = _lookahead;
         // XXX Check if lookhead.id is really a SYMBOL
 
-        return next() && expect(Token::LPAR) && read_expr() && expect(Token::RPAR) && _handler.handle_call(head.start, head.length);
+        if (!next())
+            return false;
+
+        if (_lookahead.id == Token::LPAR)
+            return next() && read_expr() && expect(Token::RPAR) && _handler.handle_call(symbol.start, symbol.length);
+        else
+            return _handler.handle_identifier(symbol.start, symbol.length);
     }
 
     /**
-        term := number
+        term := NUMBER
                 | '+' term
                 | '-' term
                 | '(' expr ')'
-                | call
+                | call'
     */
     bool read_term()
     {

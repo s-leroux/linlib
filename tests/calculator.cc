@@ -48,6 +48,21 @@ struct EH : public linlib::EventHandler
         return true;
     }
 
+    static constexpr double PI  = 3.14159265358979323846;
+    static constexpr double E   = 2.71828182845904523536;
+
+    bool handle_identifier(const char *identifier, std::size_t len)
+    {
+        std::string symbol(identifier, len);
+
+        if (symbol == "pi")
+            return push(PI);
+        else if (symbol == "e")
+            return push(E);
+        else
+            return false;
+    }
+
     bool handle_literal(double v)
     {
         push(v);
@@ -118,6 +133,8 @@ TEST(Parser, should_pass) {
     test(" 1 * 2/4 ", 0.5);
     test(" sqrt(4)", 2);
     test(" 1+2**3", 9);
+    test(" e+1", 3.718281828459045235360287471352);
+    test("1e+1", 10);
 }
 
 TEST(Parser, should_fail) {

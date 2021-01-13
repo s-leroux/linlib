@@ -24,6 +24,15 @@ struct EH : public linlib::EventHandler
       return true;
     }
 
+    bool handle_identifier(const char *identifier, std::size_t len)
+    {
+      char buffer[32];
+
+      std::snprintf(buffer, sizeof(buffer)/sizeof(char), "LOAD(%.*s)", (int)len, identifier);
+      push(buffer);
+      return true;
+    }
+
     bool handle_literal(double v)
     {
       push(v);
@@ -334,6 +343,32 @@ TEST(Parser, funcall)
         "2.000000;"
         "ADD;"
         "CALL(cos);"
+  );
+}
+
+// ========================================================================
+//  Constants
+// ========================================================================
+TEST(Parser, loadsymbol)
+{
+  const char*  testcases[] = {
+    "10+e-1",
+    "10 +e-1",
+    "10+ e-1",
+    "10+e -1",
+    "10+e- 1",
+    "10+ e -1",
+    "10 +e- 1",
+    "10 +e -1",
+    "10+ e- 1",
+  };
+
+  test(testcases,
+        "10.000000;"
+        "LOAD(e);"
+        "ADD;"
+        "1.000000;"
+        "SUB;"
   );
 }
 
