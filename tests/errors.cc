@@ -34,7 +34,7 @@ struct NEH : public linlib::EventHandler
 
     NEH(int mode) : mode(mode) {}
 
-    bool handle_call(const char *identifier, std::size_t len)
+    bool call(const char *identifier, std::size_t len)
     {
         return !(mode & CALL);
     }

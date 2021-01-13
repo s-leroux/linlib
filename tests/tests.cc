@@ -15,7 +15,7 @@ struct EH : public linlib::EventHandler
     template<std::size_t N>
     bool push(const char (&v)[N]) { _stack = _stack + v + ";"; return true; }
 
-    bool handle_call(const char *identifier, std::size_t len)
+    bool call(const char *identifier, std::size_t len)
     {
       char buffer[32];
 

@@ -129,7 +129,7 @@ class ParserEngine
             return false;
 
         if (_lookahead.id == Token::LPAR)
-            return next() && read_expr() && expect(Token::RPAR) && _handler.handle_call(symbol.start, symbol.length);
+            return next() && read_expr() && expect(Token::RPAR) && _handler.call(symbol.start, symbol.length);
         else
             return _handler.load(symbol.start, symbol.length);
     }

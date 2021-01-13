@@ -34,7 +34,7 @@ struct EH : public linlib::EventHandler
         return *--_sp;
     }
 
-    bool handle_call(const char *identifier, std::size_t len)
+    bool call(const char *identifier, std::size_t len)
     {
         std::string fname(identifier, len);
         auto fct = std::find_if(std::begin(fcts), std::end(fcts),
