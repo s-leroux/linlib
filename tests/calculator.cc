@@ -63,7 +63,7 @@ struct EH : public linlib::EventHandler
             return false;
     }
 
-    bool handle_literal(double v)
+    bool number(double v)
     {
         push(v);
         return true;

@@ -111,7 +111,7 @@ class ParserEngine
         if (static_cast<std::size_t>(end-_lookahead.start) != _lookahead.length)
             return syntax_error(); // XXX Should return an internal_error instead
 
-        return next() && _handler.handle_literal(result);
+        return next() && _handler.number(result);
     }
 
 

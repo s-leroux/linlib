@@ -32,7 +32,7 @@ class EventHandler
     public:
     virtual ~EventHandler(void) {}
 
-    virtual bool handle_literal(double value) = 0;
+    virtual bool number(double value) = 0;
     virtual bool call(const char *identifier, std::size_t len) = 0;
     virtual bool load(const char *identifier, std::size_t len) = 0;
     virtual bool binary_op(BinaryOpCode opcode) = 0;

@@ -44,7 +44,7 @@ struct NEH : public linlib::EventHandler
         return !(mode & IDENTIFIER);
     }
 
-    bool handle_literal(double v)
+    bool number(double v)
     {
         return !(mode & LITERAL);
     }
