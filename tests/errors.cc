@@ -39,7 +39,7 @@ struct NEH : public linlib::EventHandler
         return !(mode & CALL);
     }
 
-    bool handle_identifier(const char *identifier, std::size_t len)
+    bool load(const char *identifier, std::size_t len)
     {
         return !(mode & IDENTIFIER);
     }

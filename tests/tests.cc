@@ -24,7 +24,7 @@ struct EH : public linlib::EventHandler
       return true;
     }
 
-    bool handle_identifier(const char *identifier, std::size_t len)
+    bool load(const char *identifier, std::size_t len)
     {
       char buffer[32];
 

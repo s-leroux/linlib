@@ -51,7 +51,7 @@ struct EH : public linlib::EventHandler
     static constexpr double PI  = 3.14159265358979323846;
     static constexpr double E   = 2.71828182845904523536;
 
-    bool handle_identifier(const char *identifier, std::size_t len)
+    bool load(const char *identifier, std::size_t len)
     {
         std::string symbol(identifier, len);
 
