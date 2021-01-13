@@ -35,8 +35,8 @@ class EventHandler
     virtual bool handle_literal(double value) = 0;
     virtual bool call(const char *identifier, std::size_t len) = 0;
     virtual bool load(const char *identifier, std::size_t len) = 0;
-    virtual bool handle_binary_operator(BinaryOpCode opcode) = 0;
-    virtual bool handle_unary_operator(UnaryOpCode opcode) = 0;
+    virtual bool binary_op(BinaryOpCode opcode) = 0;
+    virtual bool unary_op(UnaryOpCode opcode) = 0;
 
     virtual void bad_token_error(const char* stmt, unsigned pos);
     virtual void syntax_error(const char* stmt, unsigned pos);

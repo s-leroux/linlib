@@ -75,7 +75,7 @@ struct EH : public linlib::EventHandler
         return true;
     }
 
-    bool handle_unary_operator(linlib::UnaryOpCode opcode)
+    bool unary_op(linlib::UnaryOpCode opcode)
     {
         double x = pop();
 
@@ -88,7 +88,7 @@ struct EH : public linlib::EventHandler
         return false;
     }
 
-    bool handle_binary_operator(linlib::BinaryOpCode opcode)
+    bool binary_op(linlib::BinaryOpCode opcode)
     {
         double b = pop(),
                a = pop();

@@ -49,7 +49,7 @@ struct NEH : public linlib::EventHandler
         return !(mode & LITERAL);
     }
 
-    bool handle_unary_operator(linlib::UnaryOpCode opcode)
+    bool unary_op(linlib::UnaryOpCode opcode)
     {
         switch(opcode)
         {
@@ -60,7 +60,7 @@ struct NEH : public linlib::EventHandler
         return false;
     }
 
-    bool handle_binary_operator(linlib::BinaryOpCode opcode)
+    bool binary_op(linlib::BinaryOpCode opcode)
     {
         switch(opcode)
         {

@@ -153,7 +153,7 @@ class ParserEngine
         }
         else if (_lookahead.id == '-')
         {
-            return next() && read_term() && _handler.handle_unary_operator(UnaryOpCode::NEG);
+            return next() && read_term() && _handler.unary_op(UnaryOpCode::NEG);
         }
         else if (_lookahead.id == Token::NUMBER)
         {
@@ -179,7 +179,7 @@ class ParserEngine
         {
             if (_lookahead.id == Token::POW)
             {
-                if (next() && read_term() && _handler.handle_binary_operator(BinaryOpCode::POW))
+                if (next() && read_term() && _handler.binary_op(BinaryOpCode::POW))
                     continue;
             }
             else
@@ -202,12 +202,12 @@ class ParserEngine
         {
             if (_lookahead.id == '*')
             {
-                if (next() && read_pow() && _handler.handle_binary_operator(BinaryOpCode::MUL))
+                if (next() && read_pow() && _handler.binary_op(BinaryOpCode::MUL))
                     continue;
             }
             else if (_lookahead.id == '/')
             {
-                if (next() && read_pow() && _handler.handle_binary_operator(BinaryOpCode::DIV))
+                if (next() && read_pow() && _handler.binary_op(BinaryOpCode::DIV))
                     continue;
             }
             else
@@ -230,12 +230,12 @@ class ParserEngine
         {
             if (_lookahead.id=='+')
             {
-                if (next() && read_prod() && _handler.handle_binary_operator(BinaryOpCode::ADD))
+                if (next() && read_prod() && _handler.binary_op(BinaryOpCode::ADD))
                     continue;
             }
             else if (_lookahead.id=='-')
             {
-                if (next() && read_prod() && _handler.handle_binary_operator(BinaryOpCode::SUB))
+                if (next() && read_prod() && _handler.binary_op(BinaryOpCode::SUB))
                     continue;
             }
             else

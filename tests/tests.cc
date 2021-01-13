@@ -39,7 +39,7 @@ struct EH : public linlib::EventHandler
       return true;
     }
 
-    bool handle_unary_operator(linlib::UnaryOpCode opcode)
+    bool unary_op(linlib::UnaryOpCode opcode)
     {
       switch(opcode)
       {
@@ -50,7 +50,7 @@ struct EH : public linlib::EventHandler
       return false;
     }
 
-    bool handle_binary_operator(linlib::BinaryOpCode opcode)
+    bool binary_op(linlib::BinaryOpCode opcode)
     {
       switch(opcode)
       {
